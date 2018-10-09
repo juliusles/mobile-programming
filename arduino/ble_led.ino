@@ -18,19 +18,22 @@
 #define LED       3
 
 // create peripheral instance, see pinouts above
-BLEPeripheral                    blePeripheral       = BLEPeripheral(BLE_REQ, BLE_RDY, BLE_RST);
-
+BLEPeripheral blePeripheral = BLEPeripheral(BLE_REQ, BLE_RDY, BLE_RST);
 // create service
-BLEService                       testService         = BLEService("fff0");
+BLEService testService = BLEService("fff0");
 // create counter characteristic
-BLEUnsignedShortCharacteristic   testCharacteristic  = BLEUnsignedShortCharacteristic("fff1", BLERead | BLEWrite | BLEWriteWithoutResponse | BLENotify /*| BLEIndicate*/);
+BLEUnsignedShortCharacteristic testCharacteristic 
+= BLEUnsignedShortCharacteristic("fff1", BLERead | BLEWrite 
+| BLEWriteWithoutResponse | BLENotify /*| BLEIndicate*/);
+
 // create user description descriptor for characteristic
-BLEDescriptor                    testDescriptor      = BLEDescriptor("2901", "counter");
+BLEDescriptor testDescriptor = BLEDescriptor("2901", "counter");
 
 // last counter update time
-unsigned long long               lastSent            = 0;
-volatile int toggle = 0;
-volatile unsigned int counter = 0;
+unsigned long long lastSent = 0;
+
+volatile int ledState = 0; 
+volatile unsigned int counter = 0; // how many times to blink the led
 
 void setup() {
   Serial.begin(9600);
@@ -47,7 +50,7 @@ void setup() {
 #endif
 
   // set device name and appearance
-  blePeripheral.setDeviceName("Test");
+  blePeripheral.setDeviceName("BLE paske");
   blePeripheral.setAppearance(0x0080);
 
   // add service, characteristic, and decriptor to peripheral
@@ -85,9 +88,13 @@ void setup() {
   OCR1A = 15624;// = (16*10^6) / (1*1024) - 1 (must be <65536)
   // turn on CTC mode
   TCCR1B |= (1 << WGM12);
-  // Set CS10 and CS12 bits for 1024 prescaler
-  //TCCR1B |= (1 << CS12) | (1 << CS10);  
-  TCCR1B |= (1 << CS12);  
+  // Set CS10, CS11 and CS12 bits for prescaler
+  //TCCR1B |= (1 << CS10);                // clk / 1 = 16 MHz
+  //TCCR1B |= (1 << CS11);                // clk / 8 = 2 MHz
+  //TCCR1B |= (1 << CS11) | (1 << CS10);  // clk / 64 = 250 kHz
+  TCCR1B |= (1 << CS12);                // clk / 256 = 62 500 Hz
+  //TCCR1B |= (1 << CS12) | (1 << CS10);  // clk / 1024 = 15 625 Hz
+  
   // enable timer compare interrupt
   TIMSK1 |= (1 << OCIE1A);
 
@@ -164,19 +171,20 @@ void characteristicUnsubscribed(BLECentral& central, BLECharacteristic& characte
   Serial.println(F("Characteristic event, unsubscribed"));
 }
 
-ISR(TIMER1_COMPA_vect){//timer0 interrupt 2kHz toggles pin 8
-//generates pulse wave of frequency 2kHz/2 = 1kHz (takes two cycles for full wave- toggle high then toggle low)
+// timer1 interrupt every 250 ms, toggle led state
+ISR(TIMER1_COMPA_vect)
+{
   if (counter > 0)
   {
-    if (toggle)
+    if (ledState)
     {
         digitalWrite(LED,HIGH);
-        toggle = 0;
+        ledState = 0;
     }
     else
     {
         digitalWrite(LED,LOW);
-        toggle = 1;
+        ledState = 1;
         counter--;
     }
   }
