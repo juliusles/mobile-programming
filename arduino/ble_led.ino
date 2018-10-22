@@ -15,7 +15,7 @@
 #define BLE_REQ   10
 #define BLE_RDY   2
 #define BLE_RST   9
-#define LED       3
+#define LED       3 // Green 3, red 7
 
 // create peripheral instance, see pinouts above
 BLEPeripheral blePeripheral = BLEPeripheral(BLE_REQ, BLE_RDY, BLE_RST);
