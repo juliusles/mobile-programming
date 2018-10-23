@@ -15,7 +15,8 @@
 #define BLE_REQ   10
 #define BLE_RDY   2
 #define BLE_RST   9
-#define LED       3 // Green 3, red 7
+#define LED_RED   7
+#define LED_GRN   3
 
 // create peripheral instance, see pinouts above
 BLEPeripheral blePeripheral = BLEPeripheral(BLE_REQ, BLE_RDY, BLE_RST);
@@ -37,12 +38,17 @@ volatile unsigned int counter = 0; // how many times to blink the led
 
 void setup() 
 {
+    pinMode(LED_RED, OUTPUT);
+    pinMode(LED_GRN, OUTPUT);
+
+    digitalWrite(LED_RED, HIGH);
+  
     Serial.begin(9600);
 #if defined (__AVR_ATmega32U4__)
     delay(5000);  //5 seconds delay for enabling to see the start up comments on the serial board
 #endif
 
-    blePeripheral.setLocalName("test");
+    blePeripheral.setLocalName("BLE paske");
 #if 1
     blePeripheral.setAdvertisedServiceUuid(testService.uuid());
 #else
@@ -51,7 +57,7 @@ void setup()
 #endif
 
     // set device name and appearance
-    blePeripheral.setDeviceName("BLE paske");
+    blePeripheral.setDeviceName("ble-arduino");
     blePeripheral.setAppearance(0x0080);
 
     // add service, characteristic, and decriptor to peripheral
@@ -67,6 +73,7 @@ void setup()
     testCharacteristic.setEventHandler(BLEWritten, characteristicWritten);
     testCharacteristic.setEventHandler(BLESubscribed, characteristicSubscribed);
     testCharacteristic.setEventHandler(BLEUnsubscribed, characteristicUnsubscribed);
+    testCharacteristic.setEventHandler(BLENotify, characteristicNotify);
 
     // set initial value for characteristic
     testCharacteristic.setValue(0);
@@ -99,7 +106,11 @@ void setup()
     // enable timer compare interrupt
     TIMSK1 |= (1 << OCIE1A);
 
-    pinMode(LED, OUTPUT);
+    digitalWrite(LED_RED, LOW);
+    digitalWrite(LED_GRN, HIGH);
+    delay(250);
+    digitalWrite(LED_GRN, LOW);
+    
 }
 
 void loop() 
@@ -186,12 +197,12 @@ ISR(TIMER1_COMPA_vect)
     {
         if (ledState)
         {
-            digitalWrite(LED, HIGH);
+            digitalWrite(LED_GRN, HIGH);
             ledState = 0;
         }
         else
         {
-            digitalWrite(LED, LOW);
+            digitalWrite(LED_GRN, LOW);
             ledState = 1;
             counter--;
         }
