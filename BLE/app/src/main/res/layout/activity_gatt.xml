@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/activity_device_description"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:id="@+id/device_description_mac"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/textView"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="22dp"
+        android:layout_marginTop="3dp"
+        android:text="TextView" />
+
+    <TextView
+        android:id="@+id/device_description_services"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/textView2"
+        android:layout_alignStart="@+id/device_description_mac"
+        android:layout_marginStart="0dp"
+        android:layout_marginTop="4dp"
+        android:text="TextView" />
+
+    <TextView
+        android:id="@+id/device_description_characteristics"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/textView3"
+        android:layout_alignStart="@+id/device_description_mac"
+        android:layout_marginTop="3dp"
+        android:text="TextView" />
+
+    <Button
+        android:id="@+id/readCharacteristicsButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/device_description_characteristics"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="35dp"
+        android:elevation="0dp"
+        android:onClick="onClickReadCharacteristic"
+        android:text="Read Characteristic Heart Rate" />
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="212dp"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginStart="0dp"
+        android:layout_marginTop="0dp"
+        android:text="@string/device_address"
+        android:textSize="18sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="242dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/device_description_mac"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="0dp"
+        android:layout_marginTop="6dp"
+        android:text="@string/device_description_services"
+        android:textSize="18sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/textView3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/device_description_services"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="0dp"
+        android:layout_marginTop="6dp"
+        android:text="@string/device_description_characteristics"
+        android:textSize="18sp"
+        android:textStyle="bold" />
+
+
+</RelativeLayout>

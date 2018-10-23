@@ -1,0 +1,19 @@
+<resources>
+    <string name="app_name">BLE_android</string>
+
+    <string name="scan_button">Scan bluetooth devices</string>
+    <string name="refresh_text">SCANNING BLUETOOTH DEVICES</string>
+
+    <string name="device_name">Device name: </string>
+    <string name="device_address">Device address: </string>
+    <string name="device_description_services">Device description services: </string>
+    <string name="device_description_characteristics">Device description characteristics: </string>
+
+    <string name="wrong_service">Service not found</string>
+    <string name="wrong_chara">Characteristics not found</string>
+    <string name="write_ok">Characteristics sent!</string>
+
+    <string name="invalid_serviceHex">Service value is invalid</string>
+    <string name="invalid_characteristicHex">Characteristic value is invalid</string>
+
+</resources>
