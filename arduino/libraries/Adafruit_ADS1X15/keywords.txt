@@ -1,0 +1,46 @@
+#######################################
+# Syntax Coloring Map For OneWire
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+Adafruit_ADS1015	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+  
+begin	KEYWORD2
+readADC_SingleEnded	KEYWORD2
+readADC_Differential_0_1	KEYWORD2
+readADC_Differential_2_3	KEYWORD2
+startComparator_SingleEnded	KEYWORD2
+getLastConversionResults	KEYWORD2
+setGain	KEYWORD2
+setSPS	KEYWORD2
+getGain	KEYWORD2
+
+#######################################
+# Instances (KEYWORD2)
+#######################################
+
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+GAIN_TWOTHIRDS	LITERAL1
+GAIN_ONE	LITERAL1
+GAIN_TWO	LITERAL1
+GAIN_FOUR	LITERAL1
+GAIN_EIGHT	LITERAL1
+GAIN_SIXTEEN	LITERAL1
+SPS_128	LITERAL1
+SPS_250	LITERAL1
+SPS_490	LITERAL1
+SPS_920	LITERAL1
+SPS_1600	LITERAL1
+SPS_2400	LITERAL1
+SPS_3300	LITERAL1
