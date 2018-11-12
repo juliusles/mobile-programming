@@ -14,19 +14,19 @@
 </pre>
 ## SPS options:
 <pre>
-128 (default) xx00 1xxx
+128            xx00 1xxx
 
-250           xx01 0xxx
+250            xx01 0xxx
 
-490           xx01 1xxx
+490            xx01 1xxx
 
-920           xx10 0xxx
+920            xx10 0xxx
 
-1600          xx10 1xxx
+1600 (default) xx10 1xxx
 
-2400          xx11 0xxx
+2400           xx11 0xxx
 
-3300          xx11 1xxx
+3300           xx11 1xxx
 </pre>
 
 ## Read ADC value
