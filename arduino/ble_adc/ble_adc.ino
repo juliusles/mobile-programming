@@ -28,6 +28,10 @@ BLEUnsignedShortCharacteristic testCharacteristic
 = BLEUnsignedShortCharacteristic("fff1", BLERead | BLEWrite 
 | BLEWriteWithoutResponse | BLENotify /*| BLEIndicate*/);
 
+BLEUnsignedShortCharacteristic adcValueCharacteristic 
+= BLEUnsignedShortCharacteristic("fff2", BLERead | BLEWrite 
+| BLEWriteWithoutResponse | BLENotify /*| BLEIndicate*/);
+
 // create user description descriptor for characteristic
 BLEDescriptor testDescriptor = BLEDescriptor("2901", "counter");
 
@@ -61,6 +65,7 @@ void setup()
     // add service, characteristic, and decriptor to peripheral
     blePeripheral.addAttribute(testService);
     blePeripheral.addAttribute(testCharacteristic);
+    blePeripheral.addAttribute(adcValueCharacteristic);
     blePeripheral.addAttribute(testDescriptor);
 
     // assign event handlers for connected, disconnected to peripheral
@@ -75,6 +80,7 @@ void setup()
 
     // set initial value for characteristic
     testCharacteristic.setValue(0);
+    adcValueCharacteristic.setValue(0);
 
     // begin initialization
     blePeripheral.begin();
@@ -146,7 +152,7 @@ void loop()
             if (testCharacteristic.written()) 
             {
                 // central wrote new value to characteristic
-                Serial.println(F("counter written, reset"));
+                //Serial.println(F("counter written, reset"));
 
                 // reset counter value
                 lastSent = 0;
@@ -235,78 +241,98 @@ ISR(TIMER1_COMPA_vect)
 void handleBleCmd(byte value)
 {
     // Read command
-    if (value & 0x40) // 0100 0000
-    {        
+    if (!(value & 0x3F) || value == 0xFF) // if xx00 0000 or 1111 1111)
+    {
         int adcValue = 0;
-        adcValue = ads.readADC_SingleEnded(0);
+
+        switch (value)
+        {
+            case 0x40:
+                adcValue = ads.readADC_SingleEnded(0);
+                break;
+            case 0x80:
+                adcValue = ads.readADC_SingleEnded(1);
+                break;
+            case 0xC0:
+                adcValue = ads.readADC_SingleEnded(2);
+                break;    
+            case 0xFF:
+                adcValue = ads.readADC_SingleEnded(3);
+                break;
+            default: 
+                break;
+        }
         
         Serial.print(F("ADC: "));
         Serial.println(adcValue);
-        testCharacteristic.setValue(adcValue);
-        
+
+        adcValueCharacteristic.setValue(adcValue);
     }
-    // Gain
-    switch (value & 0x07) // 0000 0111
+    else
     {
-        case 1: 
-            ads.setGain(GAIN_TWOTHIRDS); 
-            Serial.println(F("Gain set to 2/3")); 
-            break;
-        case 2: 
-            ads.setGain(GAIN_ONE);       
-            Serial.println(F("Gain set to 1"));   
-            break;
-        case 3: 
-            ads.setGain(GAIN_TWO);       
-            Serial.println(F("Gain set to 2"));   
-            break;
-        case 4: 
-            ads.setGain(GAIN_FOUR);      
-            Serial.println(F("Gain set to 4"));   
-            break;
-        case 5: 
-            ads.setGain(GAIN_EIGHT);     
-            Serial.println(F("Gain set to 8"));   
-            break;
-        case 6: 
-            ads.setGain(GAIN_SIXTEEN);   
-            Serial.println(F("Gain set to 16"));  
-            break;
-        default: 
-            break;
-    }
-    // Samples per second
-    switch ((value & 0x38) >> 3) // 0011 1000
-    {
-        case 1: 
-            ads.setSPS(SPS_128);
-            Serial.println(F("SPS set to 128"));
-            break;
-        case 2: 
-            ads.setSPS(SPS_250);
-            Serial.println(F("SPS set to 250"));
-            break;
-        case 3: 
-            ads.setSPS(SPS_490);
-            Serial.println(F("SPS set to 490"));
-            break;
-        case 4: 
-            ads.setSPS(SPS_920);
-            Serial.println(F("SPS set to 920"));
-            break;
-        case 5: 
-            ads.setSPS(SPS_1600);
-            Serial.println(F("SPS set to 1600"));
-            break;
-        case 6: 
-            ads.setSPS(SPS_2400);
-            Serial.println(F("SPS set to 2400"));
-            break;
-        case 7: 
-            ads.setSPS(SPS_3300);
-            Serial.println(F("SPS set to 3300"));
-            break;
-        default: 
-            break;
+        // Gain
+        switch (value & 0x07) // 0000 0111
+        {
+            case 1: 
+                ads.setGain(GAIN_TWOTHIRDS); 
+                Serial.println(F("Gain set to 2/3")); 
+                break;
+            case 2: 
+                ads.setGain(GAIN_ONE);       
+                Serial.println(F("Gain set to 1"));   
+                break;
+            case 3: 
+                ads.setGain(GAIN_TWO);       
+                Serial.println(F("Gain set to 2"));   
+                break;
+            case 4: 
+                ads.setGain(GAIN_FOUR);      
+                Serial.println(F("Gain set to 4"));   
+                break;
+            case 5: 
+                ads.setGain(GAIN_EIGHT);     
+                Serial.println(F("Gain set to 8"));   
+                break;
+            case 6: 
+                ads.setGain(GAIN_SIXTEEN);   
+                Serial.println(F("Gain set to 16"));  
+                break;
+            default: 
+                break;
+        }
+        // Samples per second
+        switch ((value & 0x38) >> 3) // 0011 1000
+        {
+            case 1: 
+                ads.setSPS(SPS_128);
+                Serial.println(F("SPS set to 128"));
+                break;
+            case 2: 
+                ads.setSPS(SPS_250);
+                Serial.println(F("SPS set to 250"));
+                break;
+            case 3: 
+                ads.setSPS(SPS_490);
+                Serial.println(F("SPS set to 490"));
+                break;
+            case 4: 
+                ads.setSPS(SPS_920);
+                Serial.println(F("SPS set to 920"));
+                break;
+            case 5: 
+                ads.setSPS(SPS_1600);
+                Serial.println(F("SPS set to 1600"));
+                break;
+            case 6: 
+                ads.setSPS(SPS_2400);
+                Serial.println(F("SPS set to 2400"));
+                break;
+            case 7: 
+                ads.setSPS(SPS_3300);
+                Serial.println(F("SPS set to 3300"));
+                break;
+            default: 
+                break;
+        }
     }
 }
