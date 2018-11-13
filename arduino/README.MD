@@ -1,36 +1,42 @@
 ## Gain options:
 <pre>
-2/3 (default) xxxx x001
+2/3 (default) 00xx x001
 
-1             xxxx x010
+1             00xx x010
 
-2             xxxx x011
+2             00xx x011
 
-4             xxxx x100
+4             00xx x100
 
-8             xxxx x101
+8             00xx x101
 
-16            xxxx x110
+16            00xx x110
 </pre>
 ## SPS options:
 <pre>
-128            xx00 1xxx
+128            0000 1xxx
 
-250            xx01 0xxx
+250            0001 0xxx
 
-490            xx01 1xxx
+490            0001 1xxx
 
-920            xx10 0xxx
+920            0010 0xxx
 
-1600 (default) xx10 1xxx
+1600 (default) 0010 1xxx
 
-2400           xx11 0xxx
+2400           0011 0xxx
 
-3300           xx11 1xxx
+3300           0011 1xxx
 </pre>
 
-## Read ADC value
+## Select ADC channel 0...3
 
-<pre>x1xx xxxx</pre>
+<pre>
+adc0          0100 0000
 
-## TODO: select ADC channel 0...3
+adc1          1000 0000
+
+adc2          1100 0000
+
+adc3          1111 1111
+</pre>
