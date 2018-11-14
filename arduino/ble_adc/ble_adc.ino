@@ -7,15 +7,17 @@
 #include <Wire.h>
 #include <Adafruit_ADS1015.h>
 
-#define ENABLE_ADC 0
-
 // define pins (varies per shield/board)
-#define BLE_REQ   10
-#define BLE_RDY   2
-#define BLE_RST   9
+#define BLE_RDY     2
+#define BLE_RST     9
+#define BLE_REQ     10
 
-#define LED_GRN   3
-#define LED_RED   7
+#define LED_GRN     3
+#define LED_RED     7
+
+#define ADDR_PIN_0  5
+#define ADDR_PIN_1  6
+#define ADDR_PIN_2  8
 
 Adafruit_ADS1015 ads;
 
@@ -248,23 +250,53 @@ void handleBleCmd(byte value)
         switch (value)
         {
             case 0x40:
-                adcValue = ads.readADC_SingleEnded(0);
+                selectChannel(0);
+                Serial.println(F("Channel: A0"));
                 break;
             case 0x80:
-                adcValue = ads.readADC_SingleEnded(1);
+                selectChannel(1);
+                Serial.println(F("Channel: A1"));
                 break;
             case 0xC0:
-                adcValue = ads.readADC_SingleEnded(2);
+                selectChannel(2);
+                Serial.println(F("Channel: A2"));
                 break;    
             case 0xFF:
-                adcValue = ads.readADC_SingleEnded(3);
+                selectChannel(3);
+                Serial.println(F("Channel: A3"));
                 break;
             default: 
                 break;
         }
+        delay(20);
+        adcValue = analogRead(A1);
+        Serial.print(F("ADC0: "));
+        Serial.println(adcValue);
+        
+        delay(20);
+        adcValue = analogRead(A2);
+        Serial.print(F("ADC1: "));
+        Serial.println(adcValue);
+        
+        delay(20);
+        adcValue = analogRead(A3);
+        Serial.print(F("ADC2: "));
+        Serial.println(adcValue);
+        
+        delay(20);
+        adcValue = analogRead(A4);
+        Serial.print(F("ADC3: "));
+        Serial.println(adcValue);
+        
+        
+        delay(20);
+        
+        //adcValue = ads.readADC_SingleEnded(0);
+        adcValue = analogRead(A0);
         
         Serial.print(F("ADC: "));
         Serial.println(adcValue);
+        Serial.print("\n");
 
         adcValueCharacteristic.setValue(adcValue);
     }
@@ -336,3 +368,15 @@ void handleBleCmd(byte value)
         }
     }
 }
+
+void selectChannel(byte channel)
+{
+    digitalWrite(ADDR_PIN_0, (channel & 0x01) >> 0);
+    digitalWrite(ADDR_PIN_1, (channel & 0x02) >> 1);
+    digitalWrite(ADDR_PIN_2, (channel & 0x04) >> 2);
+}
+
+
+
+
+
