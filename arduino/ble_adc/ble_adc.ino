@@ -24,7 +24,7 @@ Adafruit_ADS1015 ads;
 // create peripheral instance, see pinouts above
 BLEPeripheral blePeripheral = BLEPeripheral(BLE_REQ, BLE_RDY, BLE_RST);
 // create service
-BLEService testService = BLEService("fff0");
+BLEService service = BLEService("fff0");
 // create counter characteristic
 BLEUnsignedShortCharacteristic testCharacteristic 
 = BLEUnsignedShortCharacteristic("fff1", BLERead | BLEWrite 
@@ -35,7 +35,7 @@ BLEUnsignedShortCharacteristic adcValueCharacteristic
 | BLEWriteWithoutResponse | BLENotify /*| BLEIndicate*/);
 
 // create user description descriptor for characteristic
-BLEDescriptor testDescriptor = BLEDescriptor("2901", "counter");
+BLEDescriptor descriptor = BLEDescriptor("2901", "counter");
 
 // last counter update time
 unsigned long long lastSent = 0;
@@ -58,17 +58,17 @@ void setup()
 #endif
 
     blePeripheral.setLocalName("BLE paske");
-    blePeripheral.setAdvertisedServiceUuid(testService.uuid());
+    blePeripheral.setAdvertisedServiceUuid(service.uuid());
 
     // set device name and appearance
     blePeripheral.setDeviceName("BLE paske");
     blePeripheral.setAppearance(0x0080);
 
     // add service, characteristic, and decriptor to peripheral
-    blePeripheral.addAttribute(testService);
+    blePeripheral.addAttribute(service);
     blePeripheral.addAttribute(testCharacteristic);
     blePeripheral.addAttribute(adcValueCharacteristic);
-    blePeripheral.addAttribute(testDescriptor);
+    blePeripheral.addAttribute(descriptor);
 
     // assign event handlers for connected, disconnected to peripheral
     blePeripheral.setEventHandler(BLEConnected, blePeripheralConnectHandler);
@@ -146,31 +146,31 @@ void loop()
         Serial.println(central.address());
 
         // reset counter value
-        testCharacteristic.setValue(0);
+        //testCharacteristic.setValue(0);
 
         while (central.connected()) 
         {
             // central still connected to peripheral
-            if (testCharacteristic.written()) 
-            {
+            //if (testCharacteristic.written()) 
+            //{
                 // central wrote new value to characteristic
                 //Serial.println(F("counter written, reset"));
 
                 // reset counter value
-                lastSent = 0;
-                testCharacteristic.setValue(0);
-            }
-            if (millis() > 1000 && (millis() - 1000) > lastSent) 
-            {
+                //lastSent = 0;
+                //testCharacteristic.setValue(0);
+            //}
+            //if (millis() > 1000 && (millis() - 1000) > lastSent) 
+            //{
                 // atleast one second has passed since last increment
-                lastSent = millis();
+                //lastSent = millis();
 
                 // increment characteristic value
                 //testCharacteristic.setValue(testCharacteristic.value() + 1);
 
                 //Serial.print(F("counter = "));
                 //Serial.println(testCharacteristic.value(), DEC);
-            }
+            //}
             // Handle commands sent from Android
             if (bleCmdValue > 0)
             {
