@@ -15,6 +15,12 @@
 #define LED_GRN     3
 #define LED_RED     7
 
+#define RGB_RED     5
+#define RGB_GREEN   6
+#define RGB_BLUE    3
+
+#define BUTTON      4
+
 //#define ADDR_PIN_0  5
 //#define ADDR_PIN_1  6
 //#define ADDR_PIN_2  8
@@ -49,6 +55,7 @@ void setup()
 {
     pinMode(LED_RED, OUTPUT);
     pinMode(LED_GRN, OUTPUT);
+    pinMode(BUTTON, INPUT_PULLUP);
     
     digitalWrite(LED_RED, HIGH);
     
@@ -135,8 +142,45 @@ void setup()
     digitalWrite(LED_GRN, LOW);
 }
 
+void rgbWrite(byte r, byte g, byte b)
+{
+    analogWrite(RGB_RED, r);
+    analogWrite(RGB_GREEN, g);
+    analogWrite(RGB_BLUE, b);
+    delay(10);
+}
+
 void loop() 
 {
+    static byte r = 255;
+    static byte g = 0;
+    static byte b = 0;
+    
+    for (g = 0; g < 255; g++) // Green 0->255
+    {
+        rgbWrite(r, g, b);
+    }
+    for (r = 255; r > 0; r--) // Red 255->0
+    {
+        rgbWrite(r, g, b);
+    }
+    for (b = 0; b < 255; b++) // Blue 0->255
+    {
+        rgbWrite(r, g, b);
+    }
+    for (g = 255; g > 0; g--) // Green 255->0
+    {
+        rgbWrite(r, g, b);
+    }
+    for (r = 0; r < 255; r++) // Red 0->255
+    {
+        rgbWrite(r, g, b);
+    }
+    for (b = 255; b > 0; b--) // Blue 255->0
+    {
+        rgbWrite(r, g, b);
+    }
+    
     BLECentral central = blePeripheral.central();
 
     if (central) 
@@ -242,12 +286,20 @@ ISR(TIMER1_COMPA_vect)
 
 void handleBleCmd(unsigned long value)
 {
-    Serial.print(value >> 16 & 0xFF);
+    int r, g, b;
+    r = value >>  0 & 0xFF;
+    g = value >>  8 & 0xFF;
+    b = value >> 16 & 0xFF;
+    Serial.print(r);
     Serial.print(" ");
-    Serial.print(value >>  8 & 0xFF);
+    Serial.print(g);
     Serial.print(" ");
-    Serial.print(value >>  0 & 0xFF);
+    Serial.print(b);
     Serial.print("\n");
+    
+    analogWrite(RGB_RED, r);
+    analogWrite(RGB_GREEN, g);
+    analogWrite(RGB_BLUE, b);
 }
 
 //void selectChannel(byte channel)
