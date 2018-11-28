@@ -19,8 +19,11 @@
 #define ADDR_PIN_1  6
 #define ADDR_PIN_2  8
 
+//#define ANDROID
+
 Adafruit_ADS1015 ads;
 
+#ifdef ANDROID
 // create peripheral instance, see pinouts above
 BLEPeripheral blePeripheral = BLEPeripheral(BLE_REQ, BLE_RDY, BLE_RST);
 // create service
@@ -37,13 +40,16 @@ BLEUnsignedShortCharacteristic adcValueCharacteristic
 // create user description descriptor for characteristic
 BLEDescriptor descriptor = BLEDescriptor("2901", "counter");
 
-// last counter update time
-unsigned long long lastSent = 0;
-
-volatile int ledState = 0; 
-volatile unsigned int counter = 0; // how many times to blink the led
+// Command received from Android
 byte bleCmdValue = 0;
-short adcValue = 0;
+#else // Serial command
+enum setOptions
+{
+    Read,
+    Gain,
+    Sps
+};
+#endif
 
 void setup() 
 {
@@ -53,10 +59,7 @@ void setup()
     digitalWrite(LED_RED, HIGH);
     
     Serial.begin(9600);
-#if defined (__AVR_ATmega32U4__)
-    delay(5000);  //5 seconds delay for enabling to see the start up comments on the serial board
-#endif
-
+#ifdef ANDROID
     blePeripheral.setLocalName("BLE paske");
     blePeripheral.setAdvertisedServiceUuid(service.uuid());
 
@@ -88,6 +91,8 @@ void setup()
     blePeripheral.begin();
     
     Serial.print(F("BLE Peripheral"));
+#endif // ANDROID
+    
   // The ADC input range (or gain) can be changed via the following
   // functions, but be careful never to exceed VDD +0.3V max, or to
   // exceed the upper and lower limits if you adjust the input range!
@@ -109,26 +114,8 @@ void setup()
   // ads.setSPS(SPS_2400);
   // ads.setSPS(SPS_3300);
   
-  ads.begin();
-    
-////set timer1 interrupt at 1Hz
-//    TCCR1A = 0;// set entire TCCR1A register to 0
-//    TCCR1B = 0;// same for TCCR1B
-//    TCNT1  = 0;//initialize counter value to 0
-//    // set compare match register for 1hz increments
-//    OCR1A = 15624;// = (16*10^6) / (1*1024) - 1 (must be <65536)
-//    // turn on CTC mode
-//    TCCR1B |= (1 << WGM12);
-//    
-//    // Set CS10, CS11 and CS12 bits for prescaler
-//    // TCCR1B |= (1 << CS10);                // clk / 1 = 16 MHz
-//    // TCCR1B |= (1 << CS11);                // clk / 8 = 2 MHz
-//    // TCCR1B |= (1 << CS11) | (1 << CS10);  // clk / 64 = 250 kHz
-//       TCCR1B |= (1 << CS12);                // clk / 256 = 62 500 Hz
-//    // TCCR1B |= (1 << CS12) | (1 << CS10);  // clk / 1024 = 15 625 Hz
-//    
-//    // enable timer compare interrupt
-//    TIMSK1 |= (1 << OCIE1A);
+    ads.begin();
+  
     digitalWrite(LED_RED, LOW);
     digitalWrite(LED_GRN, HIGH);
     delay(250);
@@ -137,6 +124,7 @@ void setup()
 
 void loop() 
 {
+#ifdef ANDROID
     BLECentral central = blePeripheral.central();
 
     if (central) 
@@ -145,32 +133,8 @@ void loop()
         Serial.print(F("Connected to central: "));
         Serial.println(central.address());
 
-        // reset counter value
-        //testCharacteristic.setValue(0);
-
         while (central.connected()) 
         {
-            // central still connected to peripheral
-            //if (testCharacteristic.written()) 
-            //{
-                // central wrote new value to characteristic
-                //Serial.println(F("counter written, reset"));
-
-                // reset counter value
-                //lastSent = 0;
-                //testCharacteristic.setValue(0);
-            //}
-            //if (millis() > 1000 && (millis() - 1000) > lastSent) 
-            //{
-                // atleast one second has passed since last increment
-                //lastSent = millis();
-
-                // increment characteristic value
-                //testCharacteristic.setValue(testCharacteristic.value() + 1);
-
-                //Serial.print(F("counter = "));
-                //Serial.println(testCharacteristic.value(), DEC);
-            //}
             // Handle commands sent from Android
             if (bleCmdValue > 0)
             {
@@ -183,8 +147,69 @@ void loop()
         Serial.print(F("Disconnected from central: "));
         Serial.println(central.address());
     }
-}
+#else // Serial control
 
+    int serialCmd = 0;
+    
+    Serial.println(F("Enter a command:"));
+    Serial.println(F("[1] to Read ADC value"));
+    Serial.println(F("[2] to set Gain"));
+    Serial.println(F("[3] to set SPS"));
+    while (!(Serial.available() > 0));
+    
+    serialCmd = Serial.parseInt();
+    if (serialCmd == 1) // Select gain
+    {
+        Serial.println(F("Select ADC channel [1-4]:"));
+        
+        while (!(Serial.available() > 0));
+        
+        serialCmd = Serial.parseInt();
+        handleSerialCmd(Read, serialCmd);
+        
+    }
+    else if (serialCmd == 2) // Select gain
+    {
+        Serial.println(F("Set gain:"));
+        Serial.println(F("[1] G = 2/3"));
+        Serial.println(F("[2] G = 1"));
+        Serial.println(F("[3] G = 2"));
+        Serial.println(F("[4] G = 4"));
+        Serial.println(F("[5] G = 8"));
+        Serial.println(F("[6] G = 16"));
+        
+        while (!(Serial.available() > 0));
+        
+        serialCmd = Serial.parseInt();
+        handleSerialCmd(Gain, serialCmd);
+        
+    }
+    else if (serialCmd == 3) // Select SPS
+    {
+        Serial.println(F("Set SPS:"));
+        Serial.println(F("[1] SPS = 128"));
+        Serial.println(F("[2] SPS = 250"));
+        Serial.println(F("[3] SPS = 490"));
+        Serial.println(F("[4] SPS = 920"));
+        Serial.println(F("[5] SPS = 1600"));
+        Serial.println(F("[6] SPS = 2400"));
+        Serial.println(F("[7] SPS = 3300"));
+        
+        while (!(Serial.available() > 0));
+        
+        serialCmd = Serial.parseInt();
+        handleSerialCmd(Sps, serialCmd);
+        
+    }
+    else
+    {
+        Serial.println(F("Invalid choice"));
+    }
+    Serial.println(F("========================================"));
+    
+#endif
+}
+#ifdef ANDROID
 void blePeripheralConnectHandler(BLECentral& central)
 {
     // central connected event handler
@@ -219,34 +244,13 @@ void characteristicUnsubscribed(BLECentral& central, BLECharacteristic& characte
     Serial.println(F("Characteristic event, unsubscribed"));
 }
 
-// timer1 interrupt every 250 ms, toggle led state
-#if 0
-ISR(TIMER1_COMPA_vect)
-{
-    if (counter > 0)
-    {
-        if (ledState)
-        {
-            digitalWrite(LED_RED, HIGH);
-            ledState = 0;
-        }
-        else
-        {
-            digitalWrite(LED_RED, LOW);
-            ledState = 1;
-            counter--;
-        }
-    }
-}
-#endif
-
 void handleBleCmd(byte value)
 {
     // Read command
     if (!(value & 0x3F) || value == 0xFF) // if xx00 0000 or 1111 1111)
     {
         int adcValue = 0;
-
+        
         switch (value)
         {
             case 0x40:
@@ -268,31 +272,31 @@ void handleBleCmd(byte value)
             default: 
                 break;
         }
-        delay(20);
-        adcValue = analogRead(A1);
-        Serial.print(F("ADC0: "));
-        Serial.println(adcValue);
+        //delay(20);
+        //adcValue = analogRead(A1);
+        //Serial.print(F("ADC0: "));
+        //Serial.println(adcValue);
+        //
+        //delay(20);
+        //adcValue = analogRead(A2);
+        //Serial.print(F("ADC1: "));
+        //Serial.println(adcValue);
+        //
+        //delay(20);
+        //adcValue = analogRead(A3);
+        //Serial.print(F("ADC2: "));
+        //Serial.println(adcValue);
+        //
+        //delay(20);
+        //adcValue = analogRead(A4);
+        //Serial.print(F("ADC3: "));
+        //Serial.println(adcValue);
+        //
+        //
+        //delay(20);
         
-        delay(20);
-        adcValue = analogRead(A2);
-        Serial.print(F("ADC1: "));
-        Serial.println(adcValue);
-        
-        delay(20);
-        adcValue = analogRead(A3);
-        Serial.print(F("ADC2: "));
-        Serial.println(adcValue);
-        
-        delay(20);
-        adcValue = analogRead(A4);
-        Serial.print(F("ADC3: "));
-        Serial.println(adcValue);
-        
-        
-        delay(20);
-        
-        //adcValue = ads.readADC_SingleEnded(0);
-        adcValue = analogRead(A0);
+        adcValue = ads.readADC_SingleEnded(0);
+        //adcValue = analogRead(A0);
         
         Serial.print(F("ADC: "));
         Serial.println(adcValue);
@@ -368,6 +372,116 @@ void handleBleCmd(byte value)
         }
     }
 }
+#else // Serial command
+void handleSerialCmd(byte options, byte serialCmd)
+{
+    if (options == Read)
+    {
+        int adcValue = 0;
+        
+        switch (serialCmd)
+        {
+            case 1:
+                selectChannel(0);
+                Serial.println(F("Channel: A0"));
+                break;
+            case 2:
+                selectChannel(1);
+                Serial.println(F("Channel: A1"));
+                break;
+            case 3:
+                selectChannel(2);
+                Serial.println(F("Channel: A2"));
+                break;    
+            case 4:
+                selectChannel(3);
+                Serial.println(F("Channel: A3"));
+                break;
+            default: 
+                Serial.println(F("Invalid choice"));
+                return;
+        }
+        
+        adcValue = ads.readADC_SingleEnded(0);
+        
+        Serial.print(F("ADC: "));
+        Serial.println(adcValue);
+        Serial.print("\n");
+    }
+    else if (options == Gain)
+    {
+        // Set gain
+        switch (serialCmd)
+        {
+            case 1: 
+                ads.setGain(GAIN_TWOTHIRDS); 
+                Serial.println(F("Gain set to 2/3")); 
+                break;
+            case 2: 
+                ads.setGain(GAIN_ONE);       
+                Serial.println(F("Gain set to 1"));   
+                break;
+            case 3: 
+                ads.setGain(GAIN_TWO);       
+                Serial.println(F("Gain set to 2"));   
+                break;
+            case 4: 
+                ads.setGain(GAIN_FOUR);      
+                Serial.println(F("Gain set to 4"));   
+                break;
+            case 5: 
+                ads.setGain(GAIN_EIGHT);     
+                Serial.println(F("Gain set to 8"));   
+                break;
+            case 6: 
+                ads.setGain(GAIN_SIXTEEN);   
+                Serial.println(F("Gain set to 16"));  
+                break;
+            default: 
+                Serial.println(F("Invalid choice"));
+                break;
+        }
+    }
+    else if (options == Sps)
+    {
+        // Samples per second
+        switch (serialCmd)
+        {
+            case 1: 
+                ads.setSPS(SPS_128);
+                Serial.println(F("SPS set to 128"));
+                break;
+            case 2: 
+                ads.setSPS(SPS_250);
+                Serial.println(F("SPS set to 250"));
+                break;
+            case 3: 
+                ads.setSPS(SPS_490);
+                Serial.println(F("SPS set to 490"));
+                break;
+            case 4: 
+                ads.setSPS(SPS_920);
+                Serial.println(F("SPS set to 920"));
+                break;
+            case 5: 
+                ads.setSPS(SPS_1600);
+                Serial.println(F("SPS set to 1600"));
+                break;
+            case 6: 
+                ads.setSPS(SPS_2400);
+                Serial.println(F("SPS set to 2400"));
+                break;
+            case 7: 
+                ads.setSPS(SPS_3300);
+                Serial.println(F("SPS set to 3300"));
+                break;
+            default: 
+                Serial.println(F("Invalid choice"));
+                break;
+        }
+    }
+}
+#endif
 
 void selectChannel(byte channel)
 {
@@ -375,7 +489,6 @@ void selectChannel(byte channel)
     digitalWrite(ADDR_PIN_1, (channel & 0x02) >> 1);
     digitalWrite(ADDR_PIN_2, (channel & 0x04) >> 2);
 }
-
 
 
 
