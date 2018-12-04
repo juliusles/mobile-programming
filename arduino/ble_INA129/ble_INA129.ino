@@ -1,5 +1,12 @@
-// Copyright (c) Sandeep Mistry. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+/*
+ *  Julius Lesonen
+ *  Jere Heino
+ *
+ *  4.12.2018
+ *  
+ *      Measure current using INA129 and send it to android via bluetooth (nRF8001).
+ *  
+ */
 
 // Import libraries (BLEPeripheral depends on SPI)
 #include <SPI.h>
@@ -15,44 +22,45 @@
 #define LED_GRN     3
 #define LED_RED     7
 
+// Comment next line to enable serial version
+#define ANDROID
+
 Adafruit_INA219 ina219;
 
 float current_mA = 0;
-
-#define ANDROID
-
 
 #ifdef ANDROID
 // create peripheral instance, see pinouts above
 BLEPeripheral blePeripheral = BLEPeripheral(BLE_REQ, BLE_RDY, BLE_RST);
 // create service
 BLEService service = BLEService("fff0");
-// create counter characteristic
-BLEUnsignedShortCharacteristic testCharacteristic 
-= BLEUnsignedShortCharacteristic("fff1", BLERead | BLEWrite 
-| BLEWriteWithoutResponse | BLENotify /*| BLEIndicate*/);
+// create write characteristic
+BLEUnsignedShortCharacteristic writeCharacteristic 
+= BLEUnsignedShortCharacteristic("fff1", /*BLERead |*/ BLEWrite 
+/*| BLEWriteWithoutResponse | BLENotify | BLEIndicate*/);
 
 BLEUnsignedShortCharacteristic INA129ValueCharacteristic 
-= BLEUnsignedShortCharacteristic("fff2", BLERead | BLEWrite 
-| BLEWriteWithoutResponse | BLENotify /*| BLEIndicate*/);
+= BLEUnsignedShortCharacteristic("fff2", BLERead /*| BLEWrite 
+| BLEWriteWithoutResponse | BLENotify | BLEIndicate*/);
 
 // create user description descriptor for characteristic
-BLEDescriptor descriptor = BLEDescriptor("2901", "counter");
+BLEDescriptor descriptor = BLEDescriptor("2901", "INA129");
 
 // Command received from Android
 byte bleCmdValue = 0;
-#endif // Serial command
+#endif // ANDROID
 
 void setup() 
 {
+    // Setup leds
     pinMode(LED_RED, OUTPUT);
     pinMode(LED_GRN, OUTPUT);
     
+    // Turn on red so we see if setup hangs
     digitalWrite(LED_RED, HIGH);
     
     Serial.begin(9600);
     
-    //uint32_t currentFrequency;
 #ifdef ANDROID
     blePeripheral.setLocalName("BLE INA129");
     blePeripheral.setAdvertisedServiceUuid(service.uuid());
@@ -63,7 +71,7 @@ void setup()
 
     // add service, characteristic, and decriptor to peripheral
     blePeripheral.addAttribute(service);
-    blePeripheral.addAttribute(testCharacteristic);
+    blePeripheral.addAttribute(writeCharacteristic);
     blePeripheral.addAttribute(INA129ValueCharacteristic);
     blePeripheral.addAttribute(descriptor);
 
@@ -72,13 +80,12 @@ void setup()
     blePeripheral.setEventHandler(BLEDisconnected, blePeripheralDisconnectHandler);
 
     // assign event handlers for characteristic
-    testCharacteristic.setEventHandler(BLEWritten, characteristicWritten);
-    testCharacteristic.setEventHandler(BLESubscribed, characteristicSubscribed);
-    testCharacteristic.setEventHandler(BLEUnsubscribed, characteristicUnsubscribed);
-    //testCharacteristic.setEventHandler(BLENotify, characteristicNotify);
-
+    writeCharacteristic.setEventHandler(BLEWritten, characteristicWritten);
+    writeCharacteristic.setEventHandler(BLESubscribed, characteristicSubscribed);
+    writeCharacteristic.setEventHandler(BLEUnsubscribed, characteristicUnsubscribed);
+    
     // set initial value for characteristic
-    testCharacteristic.setValue(0);
+    writeCharacteristic.setValue(0);
     INA129ValueCharacteristic.setValue(0);
 
     // begin initialization
@@ -127,12 +134,9 @@ void loop()
         Serial.print(F("Disconnected from central: "));
         Serial.println(central.address());
     }
-    else
-    {
-        
-    }
 #else // Serial mode
 
+    // Measure current
     Serial.print(F("Current: "));
     Serial.print(ina219.getCurrent_mA());
     Serial.println(F(" mA"));
@@ -159,8 +163,8 @@ void characteristicWritten(BLECentral& central, BLECharacteristic& characteristi
 {
     // characteristic value written event handler
     Serial.print(F("Characteristic event, writen: "));
-    Serial.println(testCharacteristic.value(), DEC);
-    bleCmdValue = testCharacteristic.value();
+    Serial.println(writeCharacteristic.value(), DEC);
+    bleCmdValue = writeCharacteristic.value();
 }
 
 void characteristicSubscribed(BLECentral& central, BLECharacteristic& characteristic)
@@ -177,17 +181,16 @@ void characteristicUnsubscribed(BLECentral& central, BLECharacteristic& characte
 
 void handleBleCmd()
 {
+    // Measure current
     current_mA = ina219.getCurrent_mA();
-    //adcValue = analogRead(A0);
     
     Serial.print(F("Current: "));
     Serial.print(current_mA);
     Serial.println(F(" mA"));
     
+    // Send value to android
     INA129ValueCharacteristic.setValue((unsigned short)(current_mA*1000.f));
-    
 }
 #endif // ANDROID
-
 
 
