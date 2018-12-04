@@ -36,12 +36,10 @@ BLEPeripheral blePeripheral = BLEPeripheral(BLE_REQ, BLE_RDY, BLE_RST);
 BLEService service = BLEService("fff0");
 // create write characteristic
 BLEUnsignedShortCharacteristic writeCharacteristic 
-= BLEUnsignedShortCharacteristic("fff1", /*BLERead |*/ BLEWrite 
-/*| BLEWriteWithoutResponse | BLENotify | BLEIndicate*/);
+= BLEUnsignedShortCharacteristic("fff1", BLERead | BLEWrite);
 
 BLEUnsignedShortCharacteristic INA129ValueCharacteristic 
-= BLEUnsignedShortCharacteristic("fff2", BLERead /*| BLEWrite 
-| BLEWriteWithoutResponse | BLENotify | BLEIndicate*/);
+= BLEUnsignedShortCharacteristic("fff2", BLERead);
 
 // create user description descriptor for characteristic
 BLEDescriptor descriptor = BLEDescriptor("2901", "INA129");
