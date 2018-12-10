@@ -23,7 +23,7 @@
 #define LED_RED     7
 
 // Comment next line to enable serial version
-#define ANDROID
+//#define ANDROID
 
 Adafruit_INA219 ina219;
 
@@ -138,6 +138,9 @@ void loop()
     Serial.print(F("Current: "));
     Serial.print(ina219.getCurrent_mA());
     Serial.println(F(" mA"));
+    Serial.print(F("Power:"));
+    Serial.print(ina219.getPower_mW());
+    Serial.println(F(" mW"));
     
     delay(500);
 #endif
