@@ -16,6 +16,12 @@
     @section  HISTORY
 
     v1.0 - First release
+    
+    
+    Muokannut: Julius Lesonen
+    13.11.2018
+    
+    Omat muutokset on kommentoitu suomeksi.
 */
 /**************************************************************************/
 #if ARDUINO >= 100
@@ -132,6 +138,8 @@ void Adafruit_ADS1015::setGain(adsGain_t gain)
 /**************************************************************************/
 void Adafruit_ADS1015::setSPS(adsSPS_t sps)
 {
+  // Tämä funktio mahdollistaa SPS:n muokkauksen. Alkuperäisessä
+  //   Kirjsastossa käytetään koko ajan oletusarvoa 1600.
   m_sps = sps;
 }
 
@@ -163,7 +171,7 @@ uint16_t Adafruit_ADS1015::readADC_SingleEnded(uint8_t channel) {
                     ADS1015_REG_CONFIG_CMODE_TRAD   | // Traditional comparator (default val)
                     ADS1015_REG_CONFIG_MODE_SINGLE;   // Single-shot mode (default)
                     
-  // Set sample rate
+  // Asetetaan määritelty SPS
   config |= m_sps;
 
   // Set PGA/voltage range

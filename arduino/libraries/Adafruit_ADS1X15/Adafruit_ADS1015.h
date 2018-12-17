@@ -15,6 +15,12 @@
 
     v1.0  - First release
     v1.1  - Added ADS1115 support - W. Earl
+    
+    
+    Muokannut: Julius Lesonen
+    13.11.2018
+    
+    Omat muutokset on kommentoitu suomeksi.
 */
 /**************************************************************************/
 
@@ -147,7 +153,7 @@ protected:
   void      startComparator_SingleEnded(uint8_t channel, int16_t threshold);
   int16_t   getLastConversionResults();
   void      setGain(adsGain_t gain);
-  void      setSPS(adsSPS_t sps);
+  void      setSPS(adsSPS_t sps); // Tämä funktio lisätty jotta SPS voidaan määrittää itse
   adsGain_t getGain(void);
 
  private:
